@@ -1549,7 +1549,7 @@
         (run-continue state)
         (take-credits state :runner)
         (is (not (:flipped (refresh ho))) "Hoshiko does not flip"))))
-  (testing "Changing link and subtype when flipping"
+(testing "Changing link and subtype when flipping"
     (do-game
       (new-game {:runner {:id "Hoshiko Shiro: Untold Protagonist"}})
       (take-credits state :corp)
@@ -1562,7 +1562,37 @@
         (take-credits state :runner)
         (is (:flipped (refresh ho)) "Hoshiko is flipped")
         (is (= 1 (get-link state)) "Hoshiko now has 1 link")
-        (is (has-subtype? (refresh ho) "Digital") "Hoshiko now has the subtype Digital"))))
+        (is (has-subtype? (refresh ho) "Digital") "Hoshiko now has the subtype Digital")))
+  (do-game
+    (new-game {:runner {:id "Hoshiko Shiro: Untold Protagonist"
+                        :deck ["Citadel Sanctuary" "Chameleon"]}
+               :corp {:hand ["SEA Source"]
+                      :deck [(qty "Hedge Fund" 5)]}})
+    (take-credits state :corp)
+    (let [ho (get-in @state [:runner :identity])]
+      (play-from-hand state :runner "Citadel Sanctuary")
+      (run-on state "Archives")
+      (run-continue state)
+      (take-credits state :runner)
+      (play-from-hand state :corp "SEA Source")
+      (click-prompt state :corp "0")
+      (click-prompt state :runner "0")
+      (take-credits state :corp)
+      (play-from-hand state :runner "Chameleon")
+      (click-prompt state :runner "Barrier")
+      (run-empty-server state :hq)
+      (click-prompt state :runner "No action")
+      (take-credits state :runner)
+      (is (= 0 (get-link state)) "Hoshiko is not flipped yet")
+      (click-prompt state :runner "Hoshiko Shiro: Untold Protagonist")
+      (is (:flipped (refresh ho)) "Only Hoshiko flip has been resolved")
+      (is (= 1 (get-link state)) "Flipped Hoshiko has 1 Link")
+      (click-prompt state :runner "Chameleon")
+      (is (:flipped (refresh ho)) "Hoshiko flip and Chameleon have been resolved")
+      (click-prompt state :corp "0")
+      (click-prompt state :runner "0")
+      (is (:flipped (refresh ho)) "All end of turn effects have been resolved including a flip")
+      (is (= 1 (get-link state)) "Flipped Hoshiko has 1 Link"))))
   (testing "Rebirth while flipped resets link #5289"
     (do-game
       (new-game {:runner {:id "Hoshiko Shiro: Untold Protagonist"
